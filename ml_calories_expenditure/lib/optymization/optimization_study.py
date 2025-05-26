@@ -26,9 +26,10 @@ OPTUNA_DIRECTION_TYPE = Union[
 ]
 
 CREATE_OBJECTIVE_TYPE = Callable[
-    [pd.DataFrame, pd.DataFrame | pd.Series, HyperOptCombination],
+    [pd.DataFrame, HyperOptCombination],
     Callable[[optuna.Trial], Union[Tuple[float], float]],
 ]
+"""data class and model combination to objective function"""
 
 
 def get_existing_trials_info(
@@ -184,11 +185,9 @@ def optimize_model_and_save(
     model_run: str,
     direction: OPTUNA_DIRECTION_TYPE,
     model_combination: HyperOptCombination,
-    X: pd.DataFrame,
-    y: pd.DataFrame | pd.Series,
+    data: pd.DataFrame,
     n_optimization_trials: int,
     optimization_timeout: Optional[int],
-    # n_cv: int,
     n_patience: int,
     min_percentage_improvement: float,
     i: int,
@@ -201,9 +200,6 @@ def optimize_model_and_save(
 ) -> None:
     combination_name = model_combination.name
     logger.info(f"Optimizing model combination {i}: {combination_name}")
-
-    X = X.copy()
-    y = y.copy()
 
     final_direction = None
     if isinstance(direction, list):
@@ -258,16 +254,12 @@ def optimize_model_and_save(
         directions=final_direction,  # type: ignore
     )
 
-    # if (not is_single_objective and n_patience <= max(no_improvement_count)) or (
-    #     is_single_objective and n_patience <= no_improvement_count
-    # ):
     study.optimize(
         # func=create_objective_func(X, y, model_combination, n_cv),
-        func=create_objective_func(X, y, model_combination),
+        func=create_objective_func(data, model_combination),
         n_trials=n_optimization_trials,
         callbacks=[early_stopping],  # type: ignore
         timeout=optimization_timeout,
-        # n_jobs=mp.cpu_count(),
     )
 
     study_time_sum = sum(
@@ -303,35 +295,12 @@ def optimize_model_and_save(
     else:
         best_trial = study.best_trial
 
-    # completed_trails = [
-    #     trial for trial in trials if trial.state == optuna.trial.TrialState.COMPLETE
-    # ]
-
-    # if len(completed_trails) == 0:
-    #     logger.warning(
-    #         f"No completed trials found for model combination {model_combination.name}"
-    #     )
-    #     return
-
-    # if isinstance(direction, list):
-    #     # Sort trials based on the first objective
-    #     sorted_trials = sorted(
-    #         completed_trails,
-    #         key=lambda trial: trial.values[0],
-    #         reverse=direction[0] == "maximize",  # type: ignore
-    #     )
-    # else:
-    #     sorted_trials = sorted(
-    #         completed_trails, key=lambda trial: trial.value, reverse=direction == "maximize"  # type: ignore
-    #     )
-
     evaluation_metadata = (
         evaluate_hyperopted_model_func(
             model=model_combination.model,
             params=best_trial.params,
             features=model_combination.feature_combination.features,
-            X=X,
-            y=y,
+            data=data,
         )
         if evaluate_hyperopted_model_func is not None
         else dict()
@@ -372,8 +341,7 @@ def optimize_model_and_save(
         metadata=final_metadata,
     )
 
-    del X
-    del y
+    del data
     garbage_manager.clean()
 
 

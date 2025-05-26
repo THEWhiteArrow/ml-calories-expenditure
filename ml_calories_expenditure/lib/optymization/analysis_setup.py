@@ -4,7 +4,7 @@ from pathlib import Path
 import optuna
 import pandas as pd
 from ml_calories_expenditure.lib.logger import setup_logger
-from ml_calories_expenditure.lib.optymization.results import (
+from ml_calories_expenditure.lib.utils.results import (
     load_hyper_opt_results,
     load_hyper_opt_studies,
 )
@@ -32,17 +32,9 @@ def setup_analysis(
     results_dict_list = []
 
     for result in hyper_opt_results:
-        res_dict = {**result, **result["metadata"]}
-
-        if "tscv_predictions" in result["metadata"]:
-            res_dict["tscv_predictions_json"] = result["metadata"][
-                "tscv_predictions"
-            ].to_json(orient="index")
-
-        if "test_predictions" in result["metadata"]:
-            res_dict["test_predictions_json"] = result["metadata"][
-                "test_predictions"
-            ].to_json(orient="index")
+        res_dict = {**result}
+        if result["metadata"] is not None:
+            res_dict.update(result["metadata"])
 
         results_dict_list.append(res_dict)
 

@@ -1,6 +1,6 @@
 from pathlib import Path
 import pickle
-from typing import List, cast
+from typing import List, Optional, cast
 
 import optuna
 
@@ -14,6 +14,7 @@ def load_hyper_opt_results(
     model_run: str,
     output_dir_path: Path,
     hyper_opt_prefix: str,
+    selection: Optional[List[str]] = None,
 ) -> List[HyperOptResultDict]:
     logger.info(f"Loading hyper opt results for run {model_run}...")
 
@@ -28,13 +29,23 @@ def load_hyper_opt_results(
     hyper_opt_results = []
 
     for file_path in hyper_opt_results_dir_path.iterdir():
-        if file_path.is_file() and file_path.suffix == ".pkl":
+        if (
+            file_path.is_file()
+            and file_path.suffix == ".pkl"
+            and (selection is None or file_path.stem in selection)
+        ):
             logger.info(f"Loading {file_path}...")
             result = cast(HyperOptResultDict, pickle.load(open(file_path, "rb")))
             result["name"] = file_path.stem
             hyper_opt_results.append(result)
 
     logger.info(f"Loaded {len(hyper_opt_results)} hyper opt results.")
+
+    if selection is not None and len(hyper_opt_results) != len(selection):
+        logger.error(
+            f"Models not found: {list(set(selection) - set([model['name'] for model in hyper_opt_results]))}"
+        )
+        raise ValueError("Not all models were found in the specified path.")
 
     return hyper_opt_results
 

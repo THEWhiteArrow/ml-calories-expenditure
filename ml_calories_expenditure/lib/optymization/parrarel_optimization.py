@@ -1,21 +1,45 @@
 import json
-from pathlib import Path
 import signal
-from typing import Callable, Dict, List, Optional
+from pathlib import Path
 import multiprocessing as mp
+from typing import Callable, Dict, List, Optional, TypedDict
 
 
 import pandas as pd
 
+from ml_calories_expenditure.lib.logger import setup_logger
 from ml_calories_expenditure.lib.models.HyperOptCombination import HyperOptCombination
 from ml_calories_expenditure.lib.optymization.optimization_study import (
     CREATE_OBJECTIVE_TYPE,
     OPTUNA_DIRECTION_TYPE,
     optimize_model_and_save,
 )
-from ml_calories_expenditure.lib.logger import setup_logger
 
 logger = setup_logger(__name__)
+
+
+class HyperSetupDto(TypedDict):
+    n_optimization_trials: int
+    optimization_timeout: Optional[int]
+    n_patience: int
+    min_percentage_improvement: float
+    model_run: Optional[str]
+    limit_data_percentage: Optional[float]
+    processes: Optional[int]
+    output_dir_path: Path
+    hyper_opt_prefix: str
+    study_prefix: str
+    data: pd.DataFrame
+    combinations: List[HyperOptCombination]
+    hyper_direction: OPTUNA_DIRECTION_TYPE
+    metadata: Optional[Dict]
+    force_all_sequential: Optional[bool]
+    omit_names: Optional[List[str]]
+
+
+class HyperFunctionDto(TypedDict):
+    create_objective_func: CREATE_OBJECTIVE_TYPE
+    evaluate_hyperopted_model_func: Optional[Callable]
 
 
 def init_worker() -> None:
@@ -23,29 +47,14 @@ def init_worker() -> None:
 
 
 def run_parallel_optimization(
-    model_run: str,
-    direction: OPTUNA_DIRECTION_TYPE,
-    all_model_combinations: List[HyperOptCombination],
-    X: pd.DataFrame,
-    y: pd.DataFrame | pd.Series,
-    n_optimization_trials: int,
-    optimization_timeout: Optional[int],
-    n_patience: int,
-    min_percentage_improvement: float,
-    output_dir_path: Path,
-    hyper_opt_prefix: str,
-    study_prefix: str,
-    create_objective: CREATE_OBJECTIVE_TYPE,
-    omit_names: List[str] = [],
-    processes: Optional[int] = None,
-    metadata: Optional[Dict] = None,
-    evaluate_hyperopted_model_func: Optional[Callable] = None,
-    force_all_sequential: bool = False,
+    setup_dto: HyperSetupDto,
+    function_dto: HyperFunctionDto,
 ) -> None:
-    if processes is None:
-        processes = mp.cpu_count()
+    setup_dto = setup_dto.copy()
+    if setup_dto["processes"] is None:
+        setup_dto["processes"] = mp.cpu_count()
 
-    logger.info(f"Running optimization with {processes} processes")
+    logger.info(f"Running optimization with {setup_dto['processes']} processes")
 
     # IMPORTANT NOTE: paralelism depends on the classification categories amount
     # for binary outputs it is not worth to run parallel optimization
@@ -63,10 +72,16 @@ def run_parallel_optimization(
     ]
     parallel_3rd_model_prefixes = []
     omit_mulit_sufixes = ["top_0", "top_1", "top_2", ""]
+    omit_names = (
+        setup_dto["omit_names"]
+        if "omit_names" in setup_dto and setup_dto["omit_names"] is not None
+        else []
+    )
+    all_model_combinations = setup_dto["combinations"]
 
     sequential_model_combinations = [
         model_combination
-        for model_combination in all_model_combinations
+        for model_combination in setup_dto["combinations"]
         if all(  # type: ignore
             not model_combination.name.lower().startswith(prefix.lower())
             for prefix in parallel_model_prefixes + parallel_3rd_model_prefixes
@@ -103,7 +118,7 @@ def run_parallel_optimization(
         )
     ]
 
-    if force_all_sequential is True:
+    if setup_dto["force_all_sequential"] is True:
         sequential_model_combinations.extend(
             parallel_model_combinations + parallel_3rd_model_combinations
         )
@@ -130,28 +145,27 @@ def run_parallel_optimization(
         logger.info("No parallel models to optimize")
     else:
         # Set up multiprocessing pool
-        with mp.Pool(processes=processes, initializer=init_worker) as pool:
+        with mp.Pool(processes=setup_dto["processes"], initializer=init_worker) as pool:
             # Map each iteration of the loop to a process
             _ = pool.starmap(
                 optimize_model_and_save,
                 [
                     (
-                        model_run,
-                        direction,
+                        setup_dto["model_run"],
+                        setup_dto["hyper_direction"],
                         model_combination,
-                        X,
-                        y,
-                        n_optimization_trials,
-                        optimization_timeout,
-                        n_patience,
-                        min_percentage_improvement,
+                        setup_dto["data"],
+                        setup_dto["n_optimization_trials"],
+                        setup_dto["optimization_timeout"],
+                        setup_dto["n_patience"],
+                        setup_dto["min_percentage_improvement"],
                         i,
-                        output_dir_path,
-                        hyper_opt_prefix,
-                        study_prefix,
-                        create_objective,
-                        metadata,
-                        evaluate_hyperopted_model_func,
+                        setup_dto["output_dir_path"],
+                        setup_dto["hyper_opt_prefix"],
+                        setup_dto["study_prefix"],
+                        function_dto["create_objective_func"],
+                        setup_dto["metadata"],
+                        function_dto["evaluate_hyperopted_model_func"],
                     )
                     for i, model_combination in enumerate(parallel_model_combinations)
                     if model_combination.name not in omit_names
@@ -161,28 +175,29 @@ def run_parallel_optimization(
     if len(parallel_3rd_model_combinations) == 0:
         logger.info("No parallel 1/3rd models to optimize")
     else:
-        with mp.Pool(processes=processes // 3, initializer=init_worker) as pool:
+        with mp.Pool(
+            processes=setup_dto["processes"] // 3, initializer=init_worker
+        ) as pool:
             # Map each iteration of the loop to a process
             _ = pool.starmap(
                 optimize_model_and_save,
                 [
                     (
-                        model_run,
-                        direction,
+                        setup_dto["model_run"],
+                        setup_dto["hyper_direction"],
                         model_combination,
-                        X,
-                        y,
-                        n_optimization_trials,
-                        optimization_timeout,
-                        n_patience,
-                        min_percentage_improvement,
+                        setup_dto["data"],
+                        setup_dto["n_optimization_trials"],
+                        setup_dto["optimization_timeout"],
+                        setup_dto["n_patience"],
+                        setup_dto["min_percentage_improvement"],
                         i,
-                        output_dir_path,
-                        hyper_opt_prefix,
-                        study_prefix,
-                        create_objective,
-                        metadata,
-                        evaluate_hyperopted_model_func,
+                        setup_dto["output_dir_path"],
+                        setup_dto["hyper_opt_prefix"],
+                        setup_dto["study_prefix"],
+                        function_dto["create_objective_func"],
+                        setup_dto["metadata"],
+                        function_dto["evaluate_hyperopted_model_func"],
                     )
                     for i, model_combination in enumerate(
                         parallel_3rd_model_combinations
@@ -199,20 +214,19 @@ def run_parallel_optimization(
                 continue
 
             optimize_model_and_save(
-                model_run,
-                direction,
+                setup_dto["model_run"],  # type: ignore
+                setup_dto["hyper_direction"],
                 model_combination,
-                X,
-                y,
-                n_optimization_trials,
-                optimization_timeout,
-                n_patience,
-                min_percentage_improvement,
+                setup_dto["data"],
+                setup_dto["n_optimization_trials"],
+                setup_dto["optimization_timeout"],
+                setup_dto["n_patience"],
+                setup_dto["min_percentage_improvement"],
                 i,
-                output_dir_path,
-                hyper_opt_prefix,
-                study_prefix,
-                create_objective,
-                metadata,
-                evaluate_hyperopted_model_func,
+                setup_dto["output_dir_path"],
+                setup_dto["hyper_opt_prefix"],
+                setup_dto["study_prefix"],
+                function_dto["create_objective_func"],
+                setup_dto["metadata"],
+                function_dto["evaluate_hyperopted_model_func"],
             )
