@@ -66,6 +66,7 @@ def setup_hyper(setup_dto: HyperSetupDto, function_dto: HyperFunctionDto) -> int
     omit_names = list(
         set(all_omit_names) & set([model.name for model in setup_dto["combinations"]])
     )
+    setup_dto["omit_names"] = omit_names
     logger.info(f"Omitting {len(omit_names)} combinations.")
     logger.info(
         f"Running {len(setup_dto["combinations"]) - len(omit_names)} combinations."

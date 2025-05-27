@@ -15,6 +15,7 @@ from ml_calories_expenditure.lib.models.HyperOptCombination import HyperOptCombi
 from ml_calories_expenditure.lib.pipelines.ProcessingPipelineWrapper import (
     create_pipeline,
 )
+from ml_calories_expenditure.lib.utils.garbage_collector import garbage_manager
 from ml_calories_expenditure.lib.utils.features_utils import correlation_simplification
 
 logger = setup_logger(__name__)
@@ -79,6 +80,7 @@ def create_objective(
                 )
             }
 
+            garbage_manager.clean()
             score = score_dict["rmsle"]
             return -score
 

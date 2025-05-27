@@ -15,11 +15,11 @@ from ml_calories_expenditure.objectives import create_objective
 from ml_calories_expenditure.utils import PathManager, PrefixManager, load_data
 
 
-processes = 30
+processes = None
 model_run = "demo"
 use_models = [
-    "RidgeReg",
-    "KNeighborsReg",
+    # "RidgeReg",
+    # "KNeighborsReg",
     "LGBMReg",
     # "RandomForestReg",
     # "SGDReg",
