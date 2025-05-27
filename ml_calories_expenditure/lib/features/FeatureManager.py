@@ -44,7 +44,11 @@ class FeatureManager:
         optional_feature_set: List[FeatureSet] = [
             feat_set
             for feat_set in self.feature_sets
-            if (feat_set.is_optional is True and feat_set.is_exclusive is False)
+            if (
+                feat_set.is_optional is True
+                and feat_set.is_exclusive is False
+                and feat_set.is_exclusive_mandatory is False
+            )
         ]
         exclusive_feature_sets: List[FeatureSet] = [
             feat_set
