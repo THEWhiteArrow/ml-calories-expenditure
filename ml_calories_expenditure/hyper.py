@@ -12,20 +12,23 @@ from ml_calories_expenditure.objectives import create_objective
 from ml_calories_expenditure.utils import PathManager, PrefixManager, load_data
 
 
-processes = None
+processes = 30
 model_run = "demo"
 use_models = [
-    # "LGBMReg",
-    # "SGDReg",
-    # "RidgeReg",
+    "LGBMReg",
+    "SGDReg",
+    "RidgeReg",
+    "KNeighborsReg",
+    "CatBoostReg",
+    "RandomForestReg",
     "XGBReg",
-    # "HistGradientBoostingReg",
+    "HistGradientBoostingReg",
 ]
 
 train, test = load_data()
 setup_dto = HyperSetupDto(
     n_optimization_trials=100,
-    optimization_timeout=60 * 15,
+    optimization_timeout=60 * 60,
     n_patience=30,
     min_percentage_improvement=0.01,
     model_run=model_run,
@@ -38,7 +41,7 @@ setup_dto = HyperSetupDto(
     force_all_sequential=False,
     metadata=None,
     data=train,
-    limit_data_percentage=None,
+    limit_data_percentage=0.5,
     combinations=engineer_combinations_wrapper(
         data=train,
         processes=processes,

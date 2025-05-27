@@ -3,6 +3,7 @@ import os
 from typing import List, Optional
 import multiprocessing as mp
 
+from catboost import CatBoostRegressor
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
@@ -97,12 +98,13 @@ class ModelManager:
             # clean regression
             HistGradientBoostingRegressor(verbose=0, random_state=RANDOM_STATE),
             RidgeRegressor(random_state=RANDOM_STATE),
-            LGBMRegressor(n_jobs=1, verbosity=-1, random_state=RANDOM_STATE),  # type: ignore
+            LGBMRegressor(n_jobs=job_count, verbosity=-1, random_state=RANDOM_STATE),  # type: ignore
             XGBRegressorGPU(n_jobs=job_count, random_state=RANDOM_STATE, verbosity=0)._toggle_gpu(use_gpu=gpu),
             SGDRegressor(verbose=0, random_state=RANDOM_STATE, shuffle=False),
             PassiveAggressiveRegressor(random_state=RANDOM_STATE, shuffle=False),
             KNeighborsRegressor(n_jobs=1, metric="cosine"),
             RandomForestRegressor(n_jobs=job_count, random_state=RANDOM_STATE),
+            CatBoostRegressor(thread_count=job_count, random_state=RANDOM_STATE, verbose=False, allow_writing_files=False)
         ]
 
         for model_name in use_models:

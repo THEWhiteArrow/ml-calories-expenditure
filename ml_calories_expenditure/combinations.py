@@ -12,9 +12,25 @@ from ml_calories_expenditure.lib.models.ModelManager import ModelManager
 logger = setup_logger(__name__)
 
 
-def engineer_features(data: pd.DataFrame) -> pd.DataFrame:
+def engineer_features(
+    data: pd.DataFrame, manage_outliers: bool = False
+) -> pd.DataFrame:
     data = data.copy()
     data["bmi"] = data["Weight"] / ((data["Height"] / 100) ** 2)
+
+    if manage_outliers is True:
+        data.loc[:, "Weight"] = data["Weight"].clip(
+            lower=data["Weight"].quantile(0.01),
+            upper=data["Weight"].quantile(0.99),
+        )
+        data.loc[:, "Height"] = data["Height"].clip(
+            lower=data["Height"].quantile(0.01),
+            upper=data["Height"].quantile(0.99),
+        )
+        data.loc[:, "Heart_Rate"] = data["Heart_Rate"].clip(
+            lower=data["Heart_Rate"].quantile(0.01),
+            upper=data["Heart_Rate"].quantile(0.99),
+        )
 
     return data.set_index("id")
 
@@ -24,18 +40,31 @@ def engineer_feature_selection_manual() -> List[FeatureSet]:
     ans: List[FeatureSet] = []
     ans = [
         FeatureSet(
-            name="basic",
+            name="exmandatory",
             features=[
                 "Sex",
-                "Age",
                 "Height",
                 "Weight",
                 "Duration",
                 "Body_Temp",
-                "bmi",
             ],
-            is_optional=False,
-        )
+            is_exclusive_mandatory=True,
+        ),
+        FeatureSet(
+            name="age_groups",
+            features=[
+                "Age_19_30",
+                "Age_31_50",
+                "Age_51_70",
+                "Age_71_plus",
+            ],
+            is_exclusive=True,
+        ),
+        FeatureSet(
+            name="age_numeric",
+            features=["Age"],
+            is_exclusive=True,
+        ),
     ]
 
     return ans

@@ -59,7 +59,7 @@ def run_parallel_optimization(
     # IMPORTANT NOTE: paralelism depends on the classification categories amount
     # for binary outputs it is not worth to run parallel optimization
     parallel_model_prefixes = [
-        "lgbm",
+        # "lgbm",
         "ridge",
         "sv",
         "kn",

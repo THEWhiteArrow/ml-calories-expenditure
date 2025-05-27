@@ -25,8 +25,8 @@ def create_objective(
     model_combination: HyperOptCombination,
 ) -> OBJECTIVE_FUNC_TYPE:
 
-    target_name = "calories"
-    engineered_data = engineer_features(data)
+    target_name = "Calories"
+    engineered_data = engineer_features(data, manage_outliers=True)
 
     model = model_combination.model
     if model.__class__.__name__ in ("passive", "logistic", "sgd"):
@@ -55,30 +55,34 @@ def create_objective(
                 random_state=42,
             )
 
-            predictions = pd.Series(index=engineered_data.index, dtype=float)
+            fold_scores = []
             for train_index, test_index in kfold.split(engineered_data):
                 X_train, X_test = (
                     engineered_data.iloc[train_index],
                     engineered_data.iloc[test_index],
                 )
-                y_train = (engineered_data[[target_name]].iloc[train_index],)
-
+                y_train, y_test = (
+                    engineered_data[target_name].iloc[train_index],
+                    engineered_data[target_name].iloc[test_index],
+                )
                 pipeline.fit(X_train, y_train)
                 fold_predictions = pipeline.predict(X_test)
-
-                predictions.iloc[test_index] = fold_predictions
+                fold_sr = pd.Series(
+                    fold_predictions, index=X_test.index, name=target_name
+                )
+                fold_scores.append(
+                    root_mean_squared_log_error(
+                        y_true=y_test,
+                        y_pred=fold_sr.clip(lower=0),
+                    )
+                )
 
             score_dict = {
-                "rmsle": float(
-                    root_mean_squared_log_error(
-                        y_true=engineered_data[target_name],
-                        y_pred=predictions,
-                    )
-                ),
+                "cv_rmsle": sum(fold_scores) / len(fold_scores),
             }
 
-            score = score_dict["rmsle"]
-            return score
+            score = score_dict["cv_rmsle"]
+            return -score
 
         except optuna.exceptions.TrialPruned as e:
             logger.warning(f"Trial {trial.number} pruned: {e}")

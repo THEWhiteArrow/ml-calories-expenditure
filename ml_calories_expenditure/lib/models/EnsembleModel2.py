@@ -23,9 +23,9 @@ class EnsembleModel2(BaseEstimator):
         models: List[BaseEstimator],
         combination_features: List[List[str]],
         combination_names: List[str],
-        combination_scoring: Optional[List[float]],
-        combination_metadatas: Optional[List[Dict[str, Any]]],
-        scoring_direction: Literal["maximize", "minimize"],
+        combination_scoring: Optional[List[float]] = None,
+        combination_metadatas: Optional[List[Dict[str, Any]]] = None,
+        scoring_direction: Optional[Literal["maximize", "minimize"]] = None,
         task: Literal["classification", "regression"] = "classification",
         metamodel: Optional[BaseEstimator] = None,
         metadata: Optional[dict] = None,
@@ -36,49 +36,56 @@ class EnsembleModel2(BaseEstimator):
         self.estimators: List[Pipeline] = [create_pipeline(model=model, features_in=features) for model, features in zip(models, combination_features, strict=True)]
         self.combination_features : List[List[str]] = combination_features
         self.combination_names : List[str] = combination_names
-        self.combination_scoring : List[float] = combination_scoring if combination_scoring is not None else [1.0] * len(models)
         self.combination_metadatas: List[Dict[str, Any]] = combination_metadatas if combination_metadatas is not None else [dict() for _ in range(len(self.estimators))]
 
         self.task: Literal["classification", "regression"] = task
-        self.scoring_direction: Literal["maximize", "minimize"] = scoring_direction
         self.metadata: Dict[str, Any] = metadata if metadata is not None else dict()
         self.metamodel_estimator : Optional[Pipeline] = create_pipeline(model=metamodel) if metamodel is not None else None
 
         self.prediction_method: Literal["predict", "predict_proba"] = prediction_method
         self.metamodel_shuffle: bool = metamodel_shuffle
 
-        self.weights : List[float] = self._calculate_weights(scoring=self.combination_scoring, scoring_direction=self.scoring_direction)
+        if self.metamodel_estimator is None:
+            self.combination_scoring : Optional[List[float]] = combination_scoring
+            self.weights : Optional[List[float]] = self._calculate_weights(scoring=self.combination_scoring, scoring_direction=self.scoring_direction) # type: ignore
+            self.scoring_direction: Optional[Literal["maximize", "minimize"]] = scoring_direction
+        else:
+            self.weights: Optional[List[float]] = None
+            self.combination_scoring: Optional[List[float]] = None
+            self.scoring_direction: Optional[Literal["maximize", "minimize"]] = None
+
         self._health_check()
         # fmt: on
 
     def _health_check(self) -> None:
-        if (
-            len(self.combination_scoring) != len(self.estimators)
-            or len(self.combination_scoring) != len(self.combination_names)
-            or len(self.combination_scoring) != len(self.combination_features)
-            or (
-                self.predictions is not None
-                and len(self.combination_scoring) != len(self.predictions)
-            )
-            or len(self.weights) != len(self.combination_scoring)
-        ):
-            raise ValueError(
-                "Lengths of the combination_scoring, estimators, combination_names, combination_features and predictions should be the same"
-            )
+        pass
+        # if (
+        #     len(self.combination_scoring) != len(self.estimators)
+        #     or len(self.combination_scoring) != len(self.combination_names)
+        #     or len(self.combination_scoring) != len(self.combination_features)
+        #     or (
+        #         self.predictions is not None
+        #         and len(self.combination_scoring) != len(self.predictions)
+        #     )
+        #     or len(self.weights) != len(self.combination_scoring)
+        # ):
+        #     raise ValueError(
+        #         "Lengths of the combination_scoring, estimators, combination_names, combination_features and predictions should be the same"
+        #     )
 
-        if sum(self.weights) < 0.99 or sum(self.weights) > 1.01:
-            raise ValueError("Weights should sum to 1")
+        # if sum(self.weights) < 0.99 or sum(self.weights) > 1.01:
+        #     raise ValueError("Weights should sum to 1")
 
-        if any(
-            self.weights
-            != self._calculate_weights(
-                scoring=self.combination_scoring,
-                scoring_direction=self.scoring_direction,
-            )  # type: ignore
-        ):
-            raise ValueError(
-                "Weights should be calculated based on the scoring and scoring_direction"
-            )
+        # if any(
+        #     self.weights
+        #     != self._calculate_weights(
+        #         scoring=self.combination_scoring,
+        #         scoring_direction=self.scoring_direction,
+        #     )  # type: ignore
+        # ):
+        #     raise ValueError(
+        #         "Weights should be calculated based on the scoring and scoring_direction"
+        #     )
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "EnsembleModel2":
 
@@ -102,7 +109,7 @@ class EnsembleModel2(BaseEstimator):
                 n_splits=5, shuffle=self.metamodel_shuffle, random_state=1000000007
             )
             all_predictions_out_of_fold = pd.DataFrame(
-                columns=self.combination_names, index=X.index
+                columns=self.combination_names, index=X.index, dtype=np.float64
             )
             for i, (train_idx, test_idx) in enumerate(kfold.split(X)):
                 logger.info(f"Fold {i + 1}")
@@ -134,7 +141,7 @@ class EnsembleModel2(BaseEstimator):
         return self
 
     def predict(self, X: pd.DataFrame) -> pd.Series:
-
+        logger.info("Making predictions with ensemble model...")
         self.predictions: Optional[List[pd.Series | pd.DataFrame]] = None
 
         if self.prediction_method == "predict":
@@ -261,7 +268,10 @@ class EnsembleModel2(BaseEstimator):
 
         else:
             metamodel_X = pd.concat(predictions, axis=1, ignore_index=False)
-            final_pred = self.metamodel_estimator.predict(metamodel_X)  # type: ignore
+            final_pred_raw = self.metamodel_estimator.predict(metamodel_X)  # type: ignore
+            final_pred = pd.Series(
+                final_pred_raw, index=metamodel_X.index, name="prediction"
+            )
 
         if final_pred is None:
             raise ValueError("Final predictions could not be computed")

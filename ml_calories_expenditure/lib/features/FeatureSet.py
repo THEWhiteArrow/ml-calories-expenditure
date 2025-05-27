@@ -8,3 +8,4 @@ class FeatureSet(FeatureCombination):
     is_optional: bool = True
     is_exclusive: bool = False
     is_exclusive_mandatory: bool = False
+    is_standalone: bool = True
