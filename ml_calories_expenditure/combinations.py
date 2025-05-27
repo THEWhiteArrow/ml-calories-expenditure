@@ -54,6 +54,7 @@ def engineer_feature_selection_manual() -> List[FeatureSet]:
                 "Body_Temp",
             ],
             is_exclusive_mandatory=True,
+            is_standalone=False,
         ),
         FeatureSet(
             name="age_groups",
