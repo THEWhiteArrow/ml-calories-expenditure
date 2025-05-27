@@ -16,7 +16,7 @@ def engineer_features(
     data: pd.DataFrame, manage_outliers: bool = False
 ) -> pd.DataFrame:
     data = data.copy()
-    data["bmi"] = data["Weight"] / ((data["Height"] / 100) ** 2)
+    data["Bmi"] = data["Weight"] / ((data["Height"] / 100) ** 2)
 
     if manage_outliers is True:
         data.loc[:, "Weight"] = data["Weight"].clip(
@@ -37,6 +37,19 @@ def engineer_features(
     data["Age_51_70"] = (data["Age"] >= 51) & (data["Age"] <= 70)
     data["Age_71_plus"] = data["Age"] >= 71
 
+    multiplication_pairs = [
+        ("Height", "Body_Temp"),
+        ("Weight", "Body_Temp"),
+        # heart rate
+        ("Heart_Rate", "Duration"),
+        ("Heart_Rate", "Duration", "Age"),
+        ("Heart_Rate", "Body_Temp", "Duration"),
+    ]
+
+    for pair in multiplication_pairs:
+        feature_name = "_".join(pair)
+        data[feature_name] = data[list(pair)].prod(axis=1)
+
     return data.set_index("id")
 
 
@@ -52,8 +65,9 @@ def engineer_feature_selection_manual() -> List[FeatureSet]:
                 "Weight",
                 "Duration",
                 "Body_Temp",
+                "Heart_Rate",
             ],
-            is_exclusive_mandatory=True,
+            is_optional=False,
             is_standalone=False,
         ),
         FeatureSet(
@@ -64,12 +78,34 @@ def engineer_feature_selection_manual() -> List[FeatureSet]:
                 "Age_51_70",
                 "Age_71_plus",
             ],
-            is_exclusive=True,
+            is_optional=True,
+            is_standalone=False,
         ),
         FeatureSet(
             name="age_numeric",
             features=["Age"],
-            is_exclusive=True,
+            is_optional=True,
+            is_standalone=False,
+        ),
+        FeatureSet(
+            name="multi_weight",
+            features=[
+                "Bmi",
+                "Height_Body_Temp",
+                "Weight_Body_Temp",
+            ],
+            is_optional=True,
+            is_standalone=False,
+        ),
+        FeatureSet(
+            name="multi_heart_rate",
+            features=[
+                "Heart_Rate_Duration",
+                "Heart_Rate_Duration_Age",
+                "Heart_Rate_Body_Temp_Duration",
+            ],
+            is_optional=True,
+            is_standalone=False,
         ),
     ]
 
