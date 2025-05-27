@@ -96,11 +96,21 @@ class FeatureManager:
 
             for j, optional_set in enumerate(optional_feature_set):
                 if i & (1 << j):
-                    combination_name += f"{optional_set.name}_"
-                    combination_features.extend(optional_set.features)
-                    combination_standalone.append(optional_set.is_standalone)
 
-            if any(combination_standalone) or len(combination_standalone) > 1:
+                    if not any(ban in combination_name for ban in optional_set.bans):
+                        # Add the optional feature set to the combination
+                        combination_name += f"{optional_set.name}_"
+                        combination_features.extend(optional_set.features)
+                        combination_standalone.append(optional_set.is_standalone)
+
+            if (
+                any(combination_standalone)
+                or len(combination_standalone) > 1
+                and not any(
+                    combination_name in possible_set.name
+                    for possible_set in possible_combinations
+                )
+            ):
                 possible_combinations.append(
                     FeatureCombination(
                         name=combination_name, features=list(set(combination_features))

@@ -18,14 +18,14 @@ from ml_calories_expenditure.utils import PathManager, PrefixManager, load_data
 processes = 30
 model_run = "demo"
 use_models = [
+    "RidgeReg",
+    "KNeighborsReg",
     "LGBMReg",
     # "RandomForestReg",
     # "SGDReg",
-    # "RidgeReg",
-    # "KNeighborsReg",
     # "CatBoostReg",
-    # "XGBReg",
-    # "HistGradientBoostingReg",
+    "XGBReg",
+    "HistGradientBoostingReg",
 ]
 
 train, test = load_data()
@@ -52,10 +52,10 @@ train, test = load_data()
 
 
 setup_dto = HyperSetupDto(
-    n_optimization_trials=100,
+    n_optimization_trials=60,
     optimization_timeout=60 * 60,
-    n_patience=30,
-    min_percentage_improvement=0.01,
+    n_patience=20,
+    min_percentage_improvement=0.05,
     model_run=model_run,
     processes=processes,
     output_dir_path=PathManager.output.value,

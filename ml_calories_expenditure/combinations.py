@@ -80,12 +80,14 @@ def engineer_feature_selection_manual() -> List[FeatureSet]:
             ],
             is_optional=True,
             is_standalone=False,
+            bans=["age_numeric"],
         ),
         FeatureSet(
             name="age_numeric",
             features=["Age"],
             is_optional=True,
             is_standalone=False,
+            bans=["age_groups"],
         ),
         FeatureSet(
             name="multi_weight",

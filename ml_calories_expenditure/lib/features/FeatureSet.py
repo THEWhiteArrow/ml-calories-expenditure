@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List
 
 from ml_calories_expenditure.lib.features.FeatureCombination import FeatureCombination
 
@@ -9,3 +10,4 @@ class FeatureSet(FeatureCombination):
     is_exclusive: bool = False
     is_exclusive_mandatory: bool = False
     is_standalone: bool = True
+    bans: List[str] = field(default_factory=list)
