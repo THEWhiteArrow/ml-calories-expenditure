@@ -32,6 +32,11 @@ def engineer_features(
             upper=data["Heart_Rate"].quantile(0.99),
         )
 
+    data["Age_19_30"] = (data["Age"] >= 19) & (data["Age"] <= 30)
+    data["Age_31_50"] = (data["Age"] >= 31) & (data["Age"] <= 50)
+    data["Age_51_70"] = (data["Age"] >= 51) & (data["Age"] <= 70)
+    data["Age_71_plus"] = data["Age"] >= 71
+
     return data.set_index("id")
 
 

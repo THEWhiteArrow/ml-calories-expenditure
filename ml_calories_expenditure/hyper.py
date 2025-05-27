@@ -16,13 +16,13 @@ processes = 30
 model_run = "demo"
 use_models = [
     "LGBMReg",
-    "SGDReg",
-    "RidgeReg",
-    "KNeighborsReg",
-    "CatBoostReg",
     "RandomForestReg",
+    # "SGDReg",
+    # "RidgeReg",
+    # "KNeighborsReg",
+    "CatBoostReg",
     "XGBReg",
-    "HistGradientBoostingReg",
+    # "HistGradientBoostingReg",
 ]
 
 train, test = load_data()
@@ -41,7 +41,7 @@ setup_dto = HyperSetupDto(
     force_all_sequential=False,
     metadata=None,
     data=train,
-    limit_data_percentage=0.5,
+    limit_data_percentage=None,
     combinations=engineer_combinations_wrapper(
         data=train,
         processes=processes,
