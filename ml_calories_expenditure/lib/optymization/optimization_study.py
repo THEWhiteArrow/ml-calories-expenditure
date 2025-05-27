@@ -34,55 +34,24 @@ OBJECTIVE_FUNC_TYPE = Callable[[optuna.Trial], OBJECTIVE_RETURN_TYPE]
 """data class and model combination to objective function"""
 
 
-def get_existing_trials_info(
-    trials: List[optuna.trial.FrozenTrial],
-    min_percentage_improvement: float,
-    direction: str,
-) -> Tuple[int, float | None]:
-    no_improvement_count = 0
-    best_value = None
-
-    for trial in trials:
-
-        if best_value is None or (
-            trial.value is not None
-            and (
-                (
-                    direction == "maximize"
-                    and trial.value > best_value * (1.0 + min_percentage_improvement)
-                )
-                or (
-                    direction == "minimize"
-                    and trial.value < best_value * (1.0 - min_percentage_improvement)
-                )
-            )
-        ):
-            best_value = trial.value
-            no_improvement_count = 0
-        elif trial.value is not None:
-            no_improvement_count += 1
-        elif trial.value is None and trial.state == optuna.trial.TrialState.PRUNED:
-            no_improvement_count += 1
-            logger.warning(f"Trial {trial.number} was pruned")
-
-        elif trial.value is None and trial.state == optuna.trial.TrialState.COMPLETE:
-            logger.warning(f"Trial {trial.number} has no value")
-
-    return no_improvement_count, best_value
-
-
 def get_existing_trials_info_multiobj(
     trials: List[optuna.trial.FrozenTrial],
     min_percentage_improvement: float,
     directions: OPTUNA_DIRECTION_TYPE,
 ) -> Tuple[List[int], List[Optional[float]]]:
-    n_objectives = len(directions)
+
+    temp_directions = directions if isinstance(directions, list) else [directions]
+
+    n_objectives = len(temp_directions)
     no_improvement_counts = [0 for _ in range(n_objectives)]
     best_values = [None for _ in range(n_objectives)]
 
     for trial in trials:
 
-        if trial.state == optuna.trial.TrialState.PRUNED:
+        if trial.state in (
+            optuna.trial.TrialState.PRUNED,
+            optuna.trial.TrialState.FAIL,
+        ):
             for i in range(n_objectives):
                 no_improvement_counts[i] += 1
         elif trial.state == optuna.trial.TrialState.COMPLETE and trial.values is None:
@@ -93,18 +62,30 @@ def get_existing_trials_info_multiobj(
         elif (
             trial.state == optuna.trial.TrialState.COMPLETE and trial.values is not None
         ):
-            for i, direction in enumerate(directions):
+            for i, temp_direction in enumerate(temp_directions):
                 value = trial.values[i]
                 best_value = best_values[i]
                 if (
                     best_value is None
                     or (
-                        direction == "maximize"
+                        best_value >= 0
+                        and temp_direction == "maximize"
                         and value > best_value * (1.0 + min_percentage_improvement)
                     )
                     or (
-                        direction == "minimize"
+                        best_value >= 0
+                        and temp_direction == "minimize"
                         and value < best_value * (1.0 - min_percentage_improvement)
+                    )
+                    or (
+                        best_value < 0
+                        and temp_direction == "maximize"
+                        and value > best_value * (1.0 - min_percentage_improvement)
+                    )
+                    or (
+                        best_value < 0
+                        and temp_direction == "minimize"
+                        and value < best_value * (1.0 + min_percentage_improvement)
                     )
                 ):
                     best_values[i] = value
@@ -236,16 +217,11 @@ def optimize_model_and_save(
             storage=f"sqlite:///{sql_path}",
         )
 
-    if not is_single_objective:
-        no_improvement_count, best_value = get_existing_trials_info_multiobj(
-            study.get_trials(),
-            min_percentage_improvement,
-            directions=final_direction,
-        )
-    else:
-        no_improvement_count, best_value = get_existing_trials_info(
-            study.get_trials(), min_percentage_improvement, direction=final_direction
-        )
+    no_improvement_count, best_value = get_existing_trials_info_multiobj(
+        study.get_trials(),
+        min_percentage_improvement,
+        directions=final_direction,
+    )
 
     early_stopping = EarlyStoppingCallback(
         name=model_combination.name,

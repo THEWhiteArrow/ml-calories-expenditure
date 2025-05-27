@@ -46,12 +46,12 @@ class EarlyStoppingCallback:
 
     def __call__(self, study: optuna.Study, trial: optuna.trial.FrozenTrial) -> None:
 
-        if trial.state == optuna.trial.TrialState.PRUNED:
+        if trial.state in (
+            optuna.trial.TrialState.PRUNED,
+            optuna.trial.TrialState.FAIL,
+        ):
             for i in range(len(self.no_improvement_count)):  # type: ignore
                 self.no_improvement_count[i] += 1  # type: ignore
-
-        elif trial.state == optuna.trial.TrialState.FAIL:
-            pass
 
         elif trial.state == optuna.trial.TrialState.COMPLETE:
 
@@ -70,11 +70,26 @@ class EarlyStoppingCallback:
             ):
 
                 if (
-                    direction == "maximize"
-                    and cur > best * (1.0 + self.min_percentage_improvement)
-                ) or (
-                    direction == "minimize"
-                    and cur < best * (1.0 - self.min_percentage_improvement)
+                    (
+                        best >= 0
+                        and direction == "maximize"
+                        and cur > best * (1.0 + self.min_percentage_improvement)
+                    )
+                    or (
+                        best >= 0
+                        and direction == "minimize"
+                        and cur < best * (1.0 - self.min_percentage_improvement)
+                    )
+                    or (
+                        best < 0
+                        and direction == "maximize"
+                        and cur > best * (1.0 - self.min_percentage_improvement)
+                    )
+                    or (
+                        best < 0
+                        and direction == "minimize"
+                        and cur < best * (1.0 + self.min_percentage_improvement)
+                    )
                 ):
                     self.best_value[i] = cur  # type: ignore
                     self.no_improvement_count[i] = 0  # type: ignore
