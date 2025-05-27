@@ -33,9 +33,7 @@ class TrialParamWrapper:
 
         return params
 
-    def _get_random_forest_params(
-        self, trial: optuna.Trial, is_classifier: bool
-    ) -> Dict[str, Any]:
+    def _get_random_forest_params(self, trial: optuna.Trial) -> Dict[str, Any]:
         params = {
             "n_estimators": trial.suggest_int("n_estimators", 50, 500),
             "max_depth": trial.suggest_int("max_depth", 3, 20),
@@ -58,9 +56,7 @@ class TrialParamWrapper:
 
         return params
 
-    def _get_kneighbors_params(
-        self, trial: optuna.Trial, is_classifier: bool
-    ) -> Dict[str, Any]:
+    def _get_kneighbors_params(self, trial: optuna.Trial) -> Dict[str, Any]:
         params = {
             "n_neighbors": trial.suggest_int("n_neighbors", 3, 50),
             "weights": trial.suggest_categorical("weights", ["uniform", "distance"]),
@@ -90,9 +86,7 @@ class TrialParamWrapper:
             "tol": trial.suggest_float("tol", 1e-5, 1e-1, log=True),
         }
 
-    def _get_lgbm_params(
-        self, trial: optuna.Trial, is_classifier: bool
-    ) -> Dict[str, Any]:
+    def _get_lgbm_params(self, trial: optuna.Trial) -> Dict[str, Any]:
         params = {
             "n_estimators": trial.suggest_int("n_estimators", 50, 500),
             "max_depth": trial.suggest_int("max_depth", 3, 20),
@@ -117,9 +111,7 @@ class TrialParamWrapper:
 
         return params
 
-    def _get_xgb_params(
-        self, trial: optuna.Trial, is_classifier: bool
-    ) -> Dict[str, Any]:
+    def _get_xgb_params(self, trial: optuna.Trial) -> Dict[str, Any]:
         params = {
             "n_estimators": trial.suggest_int("n_estimators", 100, 1200, step=50),
             "max_depth": trial.suggest_int("max_depth", 3, 20),
@@ -210,9 +202,7 @@ class TrialParamWrapper:
 
         return params
 
-    def _get_passive_agressive_params(
-        self, trial: optuna.Trial, is_classifier: bool
-    ) -> Dict[str, Any]:
+    def _get_passive_agressive_params(self, trial: optuna.Trial) -> Dict[str, Any]:
         params = {
             "C": trial.suggest_float("C", 1e-3, 1.0, log=True),
             "tol": trial.suggest_float("tol", 1e-5, 1e-1, log=True),

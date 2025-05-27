@@ -29,6 +29,8 @@ CREATE_OBJECTIVE_TYPE = Callable[
     [pd.DataFrame, HyperOptCombination],
     Callable[[optuna.Trial], Union[Tuple[float], float]],
 ]
+OBJECTIVE_RETURN_TYPE = Union[Tuple[float], float]
+OBJECTIVE_FUNC_TYPE = Callable[[optuna.Trial], OBJECTIVE_RETURN_TYPE]
 """data class and model combination to objective function"""
 
 

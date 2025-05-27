@@ -19,6 +19,7 @@ def setup_analysis(
     hyper_opt_prefix: str,
     study_prefix: str,
     display_plots: bool,
+    save_results: bool = True,
 ) -> pd.DataFrame:
     logger.info(f"Starting analysis for run {model_run}...")
 
@@ -42,12 +43,13 @@ def setup_analysis(
     results_df = results_df.sort_values("score", ascending=False)
     logger.info(f"Results data frame shape: {results_df.shape}")
 
-    results_df.to_csv(
-        output_dir_path
-        / f"{hyper_opt_prefix}{model_run}"
-        / f"analysis_results_{model_run}.csv",
-        index=False,
-    )
+    if save_results:
+        results_df.to_csv(
+            output_dir_path
+            / f"{hyper_opt_prefix}{model_run}"
+            / f"analysis_results_{model_run}.csv",
+            index=False,
+        )
 
     if display_plots:
         hyper_opt_studies = load_hyper_opt_studies(

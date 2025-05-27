@@ -14,7 +14,6 @@ from sklearn.linear_model import (
     LogisticRegression,
     PassiveAggressiveClassifier,
     PassiveAggressiveRegressor,
-    Ridge,
     RidgeClassifier,
     SGDClassifier,
     SGDRegressor,
@@ -35,6 +34,7 @@ from ml_calories_expenditure.lib.models.ExtendedModels import (
     ExtendedLGBMRegressor,
     ExtendedXGBRegressorGPU,
     ExtendedRandomForestClassifier,
+    RidgeRegressor,
 )
 from ml_calories_expenditure.lib.models.XgbGPU import XGBClassifierGPU, XGBRegressorGPU
 
@@ -96,7 +96,7 @@ class ModelManager:
 
             # clean regression
             HistGradientBoostingRegressor(verbose=0, random_state=RANDOM_STATE),
-            Ridge(random_state=RANDOM_STATE),
+            RidgeRegressor(random_state=RANDOM_STATE),
             LGBMRegressor(n_jobs=1, verbosity=-1, random_state=RANDOM_STATE),  # type: ignore
             XGBRegressorGPU(n_jobs=job_count, random_state=RANDOM_STATE, verbosity=0)._toggle_gpu(use_gpu=gpu),
             SGDRegressor(verbose=0, random_state=RANDOM_STATE, shuffle=False),

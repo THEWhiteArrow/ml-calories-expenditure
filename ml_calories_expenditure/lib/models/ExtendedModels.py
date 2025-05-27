@@ -479,7 +479,7 @@ class ExtendedRidgeRegressor(Ridge):
             "extended_epsilon": self._extended_epsilon,
         }
 
-    def set_params(self, **params) -> "RidgeRegressor":
+    def set_params(self, **params) -> "ExtendedRidgeRegressor":
         extended_epsilon = params.pop("extended_epsilon", "")
         if extended_epsilon != "":
             self._extended_epsilon = extended_epsilon
@@ -724,3 +724,29 @@ class ExtendedKNeighborsRegressor(KNeighborsRegressor):
         else:
             y_pred = super().predict(X)
             return (y_pred >= self._extended_epsilon).astype(int)  # type: ignore
+
+
+class RidgeRegressor(Ridge):
+    def __init__(
+        self,
+        alpha=1.0,
+        fit_intercept=True,
+        copy_X=True,
+        max_iter=None,
+        tol=1e-4,
+        solver="auto",
+        positive=False,
+        random_state=None,
+        **kwargs
+    ):
+        super().__init__(
+            alpha=alpha,
+            fit_intercept=fit_intercept,
+            copy_X=copy_X,
+            max_iter=max_iter,
+            tol=tol,
+            solver=solver,  # type: ignore
+            positive=positive,
+            random_state=random_state,
+            **kwargs,
+        )
