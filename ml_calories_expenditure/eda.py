@@ -29,7 +29,7 @@ print("Created features:", X_created.columns.tolist())  # type: ignore
 
 pkl.dump(
     model,
-    open(PathManager.output.value / f"autofeat_model_{feateng_steps}.pkl", "wb"),
+    open(PathManager.cwd.value / f"autofeat_model_{feateng_steps}.pkl", "wb"),
 )
 
 

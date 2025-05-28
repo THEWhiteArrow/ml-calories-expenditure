@@ -41,11 +41,11 @@ def engineer_features(
     # NOTE: autofeat features
     autofeat2 = cast(
         AutoFeatRegressor,
-        pkl.load(open(PathManager.output.value / "autofeat_model_2.pkl", "rb")),
+        pkl.load(open(PathManager.cwd.value / "autofeat_model_2.pkl", "rb")),
     )
     autofeat3 = cast(
         AutoFeatRegressor,
-        pkl.load(open(PathManager.output.value / "autofeat_model_3.pkl", "rb")),
+        pkl.load(open(PathManager.cwd.value / "autofeat_model_3.pkl", "rb")),
     )
 
     datafeat2 = autofeat2.transform(data.drop(columns=["Calories"]))  # type: ignore
@@ -125,23 +125,23 @@ def engineer_feature_selection_manual() -> List[FeatureSet]:
                 "Sex_male",
                 "1/Duration",
                 "Weight/Age",
-                "Age*Sex_male",
                 "Age/Duration",
                 "Duration/Age",
+                "Age*Sex_male",
                 "Age*Weight**3",
                 "1/(Age*Weight)",
-                "Age**2*Duration",
-                "Age**3*Sex_male",
+                "Age**3*Duration",
                 "Age*Duration**3",
-                "Age**3*Weight**3",
-                "Duration*Sex_male",
-                "Sex_male/Duration",
+                "Age**3*Sex_male",
                 "Heart_Rate/Weight",
                 "Height/Heart_Rate",
+                "Sex_male/Duration",
+                "Duration*Sex_male",
+                "Weight**3/Duration",
                 "Duration*Weight**2",
                 "Body_Temp**3/Height",
-                "Body_Temp**2*Height",
                 "Heart_Rate**3*Weight",
+                "Heart_Rate*Height**2",
                 "Body_Temp**3*log(Age)",
                 "Heart_Rate**2*log(Age)",
                 "log(Duration)/Duration",
