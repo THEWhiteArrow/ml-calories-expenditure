@@ -22,6 +22,7 @@ from sklearn.linear_model import (
 from lightgbm import LGBMClassifier, LGBMRegressor
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
+from ml_calories_expenditure.lib.logger import setup_logger
 from ml_calories_expenditure.lib.models.ExtendedModels import (
     ExtendedKNeighborsClassifier,
     ExtendedPassiveAggressiveClassifier,
@@ -39,6 +40,7 @@ from ml_calories_expenditure.lib.models.ExtendedModels import (
 )
 from ml_calories_expenditure.lib.models.XgbGPU import XGBClassifierGPU, XGBRegressorGPU
 
+logger = setup_logger(__name__)
 
 # from ml_calories_expenditure.lib.models.NeuralNetworkCustomModel import NeuralNetworkCustomModel
 
@@ -65,6 +67,7 @@ class ModelManager:
         os.environ["OMP_NUM_THREADS"] = str(job_count)
         os.environ["MKL_NUM_THREADS"] = str(job_count)
 
+        logger.info(f"Using {job_count} jobs for model training. GPU enabled: {gpu}")
         models: List[BaseEstimator] = []
         # fmt: off
         supported_models = [
