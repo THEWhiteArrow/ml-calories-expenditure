@@ -70,26 +70,26 @@ class ModelManager:
         supported_models = [
             # extended classification
             ExtendedRidgeClassifier(random_state=RANDOM_STATE),
-            ExtendedLGBMClassifier(n_jobs=1, verbosity=-1, random_state=RANDOM_STATE),  # type: ignore
+            ExtendedLGBMClassifier(n_jobs=job_count, verbosity=-1, random_state=RANDOM_STATE),  # type: ignore
             ExtendedXGBClassifierGPU(random_state=RANDOM_STATE, n_jobs=job_count, verbosity=0)._toggle_gpu(use_gpu=gpu),
             ExtendedPassiveAggressiveClassifier(random_state=RANDOM_STATE, shuffle=False),
-            ExtendedKNeighborsClassifier(n_jobs=1, metric="cosine"),
+            ExtendedKNeighborsClassifier(n_jobs=job_count, metric="cosine"),
             ExtendedSGDClassifier(verbose=0, random_state=RANDOM_STATE, shuffle=False, penalty="elasticnet"),
             ExtendedRandomForestClassifier(n_jobs=job_count, random_state=RANDOM_STATE),
 
             # extended regression
             ExtendedRidgeRegressor(random_state=RANDOM_STATE),
-            ExtendedLGBMRegressor(n_jobs=1, verbosity=-1, random_state=RANDOM_STATE),  # type: ignore
+            ExtendedLGBMRegressor(n_jobs=job_count, verbosity=-1, random_state=RANDOM_STATE),  # type: ignore
             ExtendedXGBRegressorGPU(n_jobs=job_count, random_state=RANDOM_STATE, verbosity=0)._toggle_gpu(use_gpu=gpu),
             ExtendedSGDRegressor(verbose=0, random_state=RANDOM_STATE, shuffle=False),
             ExtendedPassiveAggressiveRegressor(random_state=RANDOM_STATE, shuffle=False),
 
             # clean classification
             RidgeClassifier(random_state=RANDOM_STATE),
-            LGBMClassifier(n_jobs=1, verbosity=-1, random_state=RANDOM_STATE),  # type: ignore
+            LGBMClassifier(n_jobs=job_count, verbosity=-1, random_state=RANDOM_STATE),  # type: ignore
             XGBClassifierGPU(random_state=RANDOM_STATE, n_jobs=job_count, verbosity=0)._toggle_gpu(use_gpu=gpu),
             PassiveAggressiveClassifier(random_state=RANDOM_STATE, shuffle=False),
-            KNeighborsClassifier(n_jobs=1, metric="cosine"),
+            KNeighborsClassifier(n_jobs=job_count, metric="cosine"),
             SGDClassifier(verbose=0, random_state=RANDOM_STATE, shuffle=False, penalty="elasticnet"),
             RandomForestClassifier(n_jobs=job_count, random_state=RANDOM_STATE),
             LogisticRegression(n_jobs=job_count, random_state=RANDOM_STATE, max_iter=1000, verbose=0),
@@ -102,7 +102,7 @@ class ModelManager:
             XGBRegressorGPU(n_jobs=job_count, random_state=RANDOM_STATE, verbosity=0)._toggle_gpu(use_gpu=gpu),
             SGDRegressor(verbose=0, random_state=RANDOM_STATE, shuffle=False),
             PassiveAggressiveRegressor(random_state=RANDOM_STATE, shuffle=False),
-            KNeighborsRegressor(n_jobs=1, metric="cosine"),
+            KNeighborsRegressor(n_jobs=job_count, metric="cosine"),
             RandomForestRegressor(n_jobs=job_count, random_state=RANDOM_STATE),
             CatBoostRegressor(thread_count=job_count, random_state=RANDOM_STATE, verbose=False, allow_writing_files=False)
         ]
