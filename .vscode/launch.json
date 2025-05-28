@@ -11,7 +11,13 @@
 			"program": "${file}",
 			"console": "internalConsole"
 		},
-
+		{
+			"name": "Eda",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${workspaceFolder}/ml_calories_expenditure/eda.py",
+			"console": "internalConsole"
+		},
 		{
 			"name": "Hyper",
 			"type": "debugpy",
@@ -19,13 +25,12 @@
 			"program": "${workspaceFolder}/ml_calories_expenditure/hyper.py",
 			"console": "internalConsole"
 		},
-
 		{
 			"name": "Ensemble",
 			"type": "debugpy",
 			"request": "launch",
 			"program": "${workspaceFolder}/ml_calories_expenditure/ensemble.py",
 			"console": "internalConsole"
-		}
+		},
 	]
 }
