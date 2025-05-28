@@ -21,9 +21,9 @@ for path in PathManager:
 
 
 class PrefixManager(Enum):
-    hyper = "hyper_opt"
-    ensemble = "ensemble"
-    study = "study"
+    hyper = "hyper_opt_"
+    ensemble = "ensemble_"
+    study = "study_"
 
 
 def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:

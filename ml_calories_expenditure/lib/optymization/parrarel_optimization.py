@@ -26,6 +26,7 @@ class HyperSetupDto(TypedDict):
     model_run: Optional[str]
     limit_data_percentage: Optional[float]
     processes: Optional[int]
+    max_concurrent_jobs: Optional[int]
     output_dir_path: Path
     hyper_opt_prefix: str
     study_prefix: str
@@ -53,6 +54,8 @@ def run_parallel_optimization(
     setup_dto = setup_dto.copy()
     if setup_dto["processes"] is None:
         setup_dto["processes"] = mp.cpu_count()
+    if setup_dto["max_concurrent_jobs"] is None:
+        setup_dto["max_concurrent_jobs"] = setup_dto["processes"]
 
     logger.info(f"Running optimization with {setup_dto['processes']} processes")
 
@@ -145,7 +148,10 @@ def run_parallel_optimization(
         logger.info("No parallel models to optimize")
     else:
         # Set up multiprocessing pool
-        with mp.Pool(processes=setup_dto["processes"], initializer=init_worker) as pool:
+        with mp.Pool(
+            processes=min(setup_dto["processes"], setup_dto["max_concurrent_jobs"]),
+            initializer=init_worker,
+        ) as pool:
             # Map each iteration of the loop to a process
             _ = pool.starmap(
                 optimize_model_and_save,
@@ -176,7 +182,10 @@ def run_parallel_optimization(
         logger.info("No parallel 1/3rd models to optimize")
     else:
         with mp.Pool(
-            processes=setup_dto["processes"] // 3, initializer=init_worker
+            processes=min(
+                setup_dto["processes"] // 3, setup_dto["max_concurrent_jobs"]
+            ),
+            initializer=init_worker,
         ) as pool:
             # Map each iteration of the loop to a process
             _ = pool.starmap(

@@ -1,47 +1,51 @@
 import logging
-import sys
+from typing import Optional
 
 
-def setup_logger(name: str | None = None) -> logging.Logger:
-    """A function to setup the logger
+def setup_logger(
+    name: str,
+    log_file: Optional[str] = "logs.log",
+):
+    """
+    Set up a logger with the specified name, log file, level, and format.
+    Logs to console by default; optionally logs to a file if log_file is provided.
 
     Args:
-        name (str | None, optional): Logger name. Defaults to None.
+        name (str): Name of the logger.
+        log_file (str, optional): File path for file logging. If None, file logging is skipped.
+        level (int, optional): Logging level (e.g., logging.INFO, logging.DEBUG).
+        fmt (str, optional): Log message format.
 
     Returns:
-        logging.Logger: Configured logger
+        logging.Logger: Configured logger instance.
     """
+    logger = logging.getLogger(name)
 
-    # Create a logger object
-    logger = logging.getLogger(name or __name__)
-
-    # Clear existing handlers
-    if logger.hasHandlers():
-        logger.handlers.clear()
-
-    # Create file handler
-    file_handler = logging.FileHandler("logs.log", mode="a")
-    file_handler.setLevel(logging.DEBUG)  # Adjust the log level as needed
-    file_formatter = logging.Formatter(
-        "%(levelname)s %(name)s %(asctime)s [%(filename)s:%(funcName)s:%(lineno)d] | %(message)s",
-        datefmt="%d/%m/%Y %H:%M:%S",
-    )
-    file_handler.setFormatter(file_formatter)
-
-    # Create stream handler (for console output)
-    stream_handler = logging.StreamHandler(stream=sys.stdout)
-    stream_handler.setLevel(logging.INFO)  # Adjust the log level as needed
+    logger.setLevel(
+        logging.DEBUG
+    )  # Set the logger to the lowest level to capture all logs
+    # Console handler
     stream_formatter = logging.Formatter(
         "%(levelname)s %(name)s %(asctime)s | %(message)s", datefmt="%H:%M:%S"
     )
+    stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(stream_formatter)
-
-    # Add handlers to the logger
-    logger.addHandler(file_handler)
+    stream_handler.setLevel(logging.INFO)
     logger.addHandler(stream_handler)
 
-    # Set logger level
-    logger.setLevel(logging.DEBUG)  # Adjust the log level as needed
+    # Optional file handler
+    if log_file:
+        file_formatter = logging.Formatter(
+            "%(levelname)s %(name)s %(asctime)s [%(filename)s:%(funcName)s:%(lineno)d] | %(message)s",
+            datefmt="%d/%m/%Y %H:%M:%S",
+        )
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(file_formatter)
+        file_handler.setLevel(logging.DEBUG)
+        logger.addHandler(file_handler)
+
+    # Prevent duplicate logs if function is called multiple times
+    logger.propagate = False
 
     return logger
 
@@ -51,5 +55,4 @@ logger = setup_logger("Init")
 
 # Example usage
 logger.info("Logger setup complete")
-
-logger.debug("Debug message")
+logger.debug("This is a debug message")

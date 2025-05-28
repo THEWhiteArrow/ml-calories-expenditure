@@ -13,15 +13,16 @@ from ml_calories_expenditure.utils import PathManager, PrefixManager, load_data
 
 
 processes = None
-model_run = "demo"
+max_concurrent_jobs = 5
+model_run = "final"
 use_models = [
     "RidgeReg",
     "KNeighborsReg",
-    "RandomForestReg",
     "SGDReg",
     "LGBMReg",
-    "XGBReg",
+    "RandomForestReg",
     "CatBoostReg",
+    # "XGBReg",
     # "HistGradientBoostingReg",
 ]
 
@@ -35,6 +36,7 @@ setup_dto = HyperSetupDto(
     min_percentage_improvement=0.010,
     model_run=model_run,
     processes=processes,
+    max_concurrent_jobs=max_concurrent_jobs,
     output_dir_path=PathManager.output.value,
     hyper_opt_prefix=PrefixManager.hyper.value,
     study_prefix=PrefixManager.study.value,
