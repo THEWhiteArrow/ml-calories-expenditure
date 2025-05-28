@@ -1,7 +1,4 @@
-from ml_calories_expenditure.combinations import (
-    engineer_combinations_wrapper,
-    engineer_features,
-)
+from ml_calories_expenditure.combinations import engineer_combinations_wrapper
 from ml_calories_expenditure.lib.optymization.analysis_setup import setup_analysis
 from ml_calories_expenditure.lib.optymization.hyper_setup import setup_hyper
 from ml_calories_expenditure.lib.optymization.optimization_study import (
@@ -18,42 +15,22 @@ from ml_calories_expenditure.utils import PathManager, PrefixManager, load_data
 processes = None
 model_run = "demo"
 use_models = [
-    # "RidgeReg",
-    # "KNeighborsReg",
+    "RidgeReg",
+    "KNeighborsReg",
+    "RandomForestReg",
+    "SGDReg",
     "LGBMReg",
-    # "RandomForestReg",
-    # "SGDReg",
-    # "CatBoostReg",
     "XGBReg",
-    "HistGradientBoostingReg",
+    "CatBoostReg",
+    # "HistGradientBoostingReg",
 ]
 
 train, test = load_data()
 
-# eng = engineer_features(train)
-# import matplotlib.pyplot as plt
-# # Select features to plot (excluding 'Calories' if present)
-# features = [col for col in eng.columns if col != "Calories" and "Age_" not in col]
-# n_features = len(features)
-# n_cols = 3
-# n_rows = (n_features + n_cols - 1) // n_cols
-# fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows))
-# axes = axes.flatten()
-# for idx, feature in enumerate(features):
-#     axes[idx].scatter(eng[feature], eng["Calories"], alpha=0.5, s=5)
-#     axes[idx].set_xlabel(feature)
-#     axes[idx].set_ylabel("Calories")
-#     axes[idx].set_title(f"Calories vs {feature}")
-# # Hide any unused subplots
-# for ax in axes[n_features:]:
-#     ax.set_visible(False)
-# plt.tight_layout()
-# plt.show()
-
 
 setup_dto = HyperSetupDto(
     n_optimization_trials=60,
-    optimization_timeout=60 * 60,
+    optimization_timeout=60 * 30,
     n_patience=20,
     min_percentage_improvement=0.010,
     model_run=model_run,
