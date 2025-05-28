@@ -48,21 +48,21 @@ def engineer_features(
         pkl.load(open(PathManager.cwd.value / "autofeat_model_3.pkl", "rb")),
     )
 
-    datafeat2 = autofeat2.transform(data.drop(columns=["Calories"]))  # type: ignore
-    datafeat3 = autofeat3.transform(data.drop(columns=["Calories"]))  # type: ignore
+    datafeat2 = autofeat2.transform(data.drop(columns=["Calories"]))
+    datafeat2.index = data.index  # type: ignore
+
+    datafeat3 = autofeat3.transform(data.drop(columns=["Calories"]))
+    datafeat3.index = data.index  # type: ignore
 
     # NOTE: merge autofeat features with the original data but drop the duplicated columns
-    data = pd.concat(
-        [
-            data,
-            datafeat2.drop(columns=data.columns, errors="ignore"),  # type: ignore
-            datafeat3.drop(columns=data.columns, errors="ignore"),  # type: ignore
-        ],
+    merged_data = pd.concat(
+        [data, datafeat2, datafeat3],  # type: ignore
         axis=1,
+        ignore_index=False,
     )
-    data = data.loc[:, ~data.columns.duplicated()]
+    merged_data = merged_data.loc[:, ~merged_data.columns.duplicated()]
 
-    data["Bmi"] = data["Weight"] / ((data["Height"] / 100) ** 2)
+    merged_data["Bmi"] = merged_data["Weight"] / ((merged_data["Height"] / 100) ** 2)
     multiplication_pairs = [
         ("Height", "Body_Temp"),
         ("Weight", "Body_Temp"),
@@ -73,9 +73,9 @@ def engineer_features(
 
     for pair in multiplication_pairs:
         feature_name = "_".join(pair)
-        data[feature_name] = data[list(pair)].prod(axis=1)
+        merged_data[feature_name] = merged_data[list(pair)].prod(axis=1)
 
-    return data
+    return merged_data
 
 
 def engineer_feature_selection_manual() -> List[FeatureSet]:

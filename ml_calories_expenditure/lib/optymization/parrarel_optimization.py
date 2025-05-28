@@ -65,7 +65,7 @@ def run_parallel_optimization(
         # "lgbm",
         "ridge",
         "sv",
-        "kn",
+        # "kn",
         "logistic",
         "passiveaggressive",
         "sgd",
