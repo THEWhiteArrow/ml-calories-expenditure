@@ -93,8 +93,7 @@ def engineer_feature_selection_manual() -> List[FeatureSet]:
                 "Body_Temp",
                 "Heart_Rate",
             ],
-            is_exclusive=True,
-            is_standalone=True,
+            is_optional=False,
         ),
         FeatureSet(
             name="multi_heart_rate",
